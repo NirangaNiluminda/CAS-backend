@@ -150,10 +150,10 @@ export const getResultsController = async (req: Request, res: Response, next: Ne
   try {
     const { assignmentId } = req.params;
 
+    // Validate if assignmentId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
       return next(new ErrorHandler("Invalid assignmentId format", 400));
     }
-
     if (!assignmentId) {
       return res.status(400).json({ success: false, message: "Assignment ID is required" });
     }
@@ -161,10 +161,7 @@ export const getResultsController = async (req: Request, res: Response, next: Ne
     const results = await QuizSubmissionModel.find({ assignmentId });
 
     if (!results || results.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "No results found for this assignment"
-      });
+      return res.status(404).json({ success: false, message: "No results found for this assignment" });
     }
 
     res.status(200).json({
@@ -175,6 +172,7 @@ export const getResultsController = async (req: Request, res: Response, next: Ne
     next(error);
   }
 };
+
 export const getStudentQuizResultsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { assignmentId, userId } = req.params;
