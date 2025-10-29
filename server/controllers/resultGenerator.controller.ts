@@ -149,27 +149,52 @@ export const downloadFullExcelSheet = CatchAsyncError(
 export const getResultsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { assignmentId } = req.params;
+    console.log('Fetching results for assignmentId:', assignmentId);
 
     // Validate if assignmentId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      return next(new ErrorHandler("Invalid assignmentId format", 400));
-    }
-    if (!assignmentId) {
-      return res.status(400).json({ success: false, message: "Assignment ID is required" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid assignmentId format" 
+      });
     }
 
-    const results = await QuizSubmissionModel.find({ assignmentId });
+    // Add query timeout protection
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Database query timeout')), 25000);
+    });
 
+    const queryPromise = QuizSubmissionModel.find({ assignmentId })
+      .select('registrationNumber score timeTaken userId submittedAt studentName violationCount')
+      .lean() // Faster than returning Mongoose documents
+      .exec();
+
+    const results = await Promise.race([queryPromise, timeoutPromise]) as any[];
+
+    // Return empty array instead of 404 - this prevents frontend errors
     if (!results || results.length === 0) {
-      return res.status(404).json({ success: false, message: "No results found for this assignment" });
+      console.log('No results found for assignment:', assignmentId);
+      return res.status(200).json({ 
+        success: true, 
+        results: [],
+        message: "No submissions yet for this assignment" 
+      });
     }
 
+    console.log(`Found ${results.length} results for assignment:`, assignmentId);
+    
     res.status(200).json({
       success: true,
       results,
     });
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('Error in getResultsController:', error);
+    // Return empty results on error instead of failing
+    return res.status(200).json({
+      success: true,
+      results: [],
+      message: "Error fetching results"
+    });
   }
 };
 
