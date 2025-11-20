@@ -1,42 +1,43 @@
 require('dotenv').config();
-import nodemailer, {Transporter} from 'nodemailer';
-import ejs from 'ejs';
-import path from 'path';
+import emailjs from '@emailjs/nodejs';
 
-interface EmailOptions{
-    email:string;
-    subject:string;
-    template:string;
-    data: {[key:string]:any};
+interface EmailOptions {
+    email: string;
+    subject: string;
+    template: string;
+    data: { [key: string]: any };
 }
 
-const sendMail = async (options: EmailOptions):Promise <void> => {
-    const transporter: Transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        service: process.env.SMTP_SERVICE,
-        auth:{
-            user: process.env.SMTP_MAIL,
-            pass: process.env.SMTP_PASSWORD,
-        },
-    });
+const sendMail = async (options: EmailOptions): Promise<void> => {
+    const { email, subject, template, data } = options;
 
-    const {email,subject,template,data} = options;
-
-    // get the pdath to the email template file
-    const templatePath = path.join(__dirname,'../mails',template);
-
-    // Render the email template with EJS
-    const html:string = await ejs.renderFile(templatePath,data);
-
-    const mailOptions = {
-        from: process.env.SMTP_MAIL,
-        to: email,
-        subject,
-        html
+    // Prepare template parameters for EmailJS
+    const templateParams = {
+        to_email: email,
+        subject: subject,
+        user_name: data.user?.name || '',
+        activation_code: data.activationCode || '',
+        reset_code: data.resetCode || '',
+        from_name: 'Online Assessment System',
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+        // Send email using EmailJS Node.js SDK
+        const response = await emailjs.send(
+            process.env.EMAILJS_SERVICE_ID || '',
+            process.env.templateId || '',
+            templateParams,
+            {
+                publicKey: process.env.EMAILJS_PUBLIC_KEY,
+                privateKey: process.env.EMAILJS_PRIVATE_KEY,
+            }
+        );
+
+        console.log('Email sent successfully via EmailJS:', response);
+    } catch (error: any) {
+        console.error('EmailJS Error:', error.text || error.message);
+        throw new Error(`Failed to send email: ${error.text || error.message}`);
+    }
 };
 
 export default sendMail;
