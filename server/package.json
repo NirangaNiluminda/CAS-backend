@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
     "build": "tsc --skipLibCheck",
+    "postbuild": "cp -r mails dist/mails",
     "start": "node dist/server.js"
   },
   "author": "",
