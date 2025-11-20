@@ -11,7 +11,7 @@ interface EmailOptions {
 const sendMail = async (options: EmailOptions): Promise<void> => {
     const { email, subject, template, data } = options;
 
-    // Prepare template parameters for EmailJS
+    // Prepare template parameters for EmailJS1
     const templateParams = {
         to_email: email,
         subject: subject,
