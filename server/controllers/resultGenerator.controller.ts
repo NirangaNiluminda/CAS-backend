@@ -149,51 +149,53 @@ export const downloadFullExcelSheet = CatchAsyncError(
 export const getResultsController = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { assignmentId } = req.params;
-    console.log('Fetching results for assignmentId:', assignmentId);
+    console.log('🔄 Fetching results for assignmentId:', assignmentId);
 
     // Validate if assignmentId is a valid ObjectId
     if (!mongoose.Types.ObjectId.isValid(assignmentId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Invalid assignmentId format" 
+      console.log('❌ Invalid assignmentId format:', assignmentId);
+      return res.status(200).json({
+        success: true,
+        results: [],
+        message: "Invalid assignment ID format"
       });
     }
 
-    // Add query timeout protection
+    // Set a timeout for the query
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Database query timeout')), 25000);
+      setTimeout(() => reject(new Error('Database query timeout')), 10000); // Reduced to 10s
     });
 
-    const queryPromise = QuizSubmissionModel.find({ assignmentId })
+    console.log('📊 Querying QuizSubmissionModel for assignment:', assignmentId);
+
+    const queryPromise = QuizSubmissionModel.find({
+      assignmentId: new mongoose.Types.ObjectId(assignmentId)
+    })
       .select('registrationNumber score timeTaken userId submittedAt studentName violationCount')
-      .lean() // Faster than returning Mongoose documents
+      .lean()
       .exec();
 
     const results = await Promise.race([queryPromise, timeoutPromise]) as any[];
 
-    // Return empty array instead of 404 - this prevents frontend errors
-    if (!results || results.length === 0) {
-      console.log('No results found for assignment:', assignmentId);
-      return res.status(200).json({ 
-        success: true, 
-        results: [],
-        message: "No submissions yet for this assignment" 
-      });
-    }
+    console.log('✅ Query completed, found results:', results?.length || 0);
 
-    console.log(`Found ${results.length} results for assignment:`, assignmentId);
-    
-    res.status(200).json({
+    // Always return success with results (empty array if no results)
+    return res.status(200).json({
       success: true,
-      results,
+      results: results || [],
+      message: results?.length > 0
+        ? `Found ${results.length} submissions`
+        : "No submissions yet for this assignment"
     });
+
   } catch (error: any) {
-    console.error('Error in getResultsController:', error);
-    // Return empty results on error instead of failing
+    console.error('❌ Error in getResultsController:', error);
+
+    // Return empty results on any error
     return res.status(200).json({
       success: true,
       results: [],
-      message: "Error fetching results"
+      message: "Error fetching results, returning empty data"
     });
   }
 };
