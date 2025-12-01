@@ -150,7 +150,7 @@ export const submitQuiz = async (submission: QuizSubmission): Promise<IQuizSubmi
   const registrationNumber = user.registrationNumber;
   const endTime = new Date();
   const timeTaken = (endTime.getTime() - submission.startTime.getTime()) / 60000;
-  
+
   // Check if time limit is exceeded
   if (timeTaken > assignment.timeLimit) {
     throw new ErrorHandler('Time limit exceeded', 400);
