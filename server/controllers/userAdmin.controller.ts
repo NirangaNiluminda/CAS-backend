@@ -89,7 +89,7 @@ export const createActivationToken = (user: any): IActivationToken => {
         },
         process.env.ACTIVATION_SECRET as Secret,
         {
-            expiresIn: "5m",
+            expiresIn: "60d",
         }
     );
 
@@ -251,7 +251,7 @@ export const updateAccessToken = CatchAsyncError(
                 { id: user._id },
                 process.env.ACCESS_TOKEN as string,
                 {
-                    expiresIn: "5m",
+                    expiresIn: "60d",
                 }
             );
 
@@ -259,7 +259,7 @@ export const updateAccessToken = CatchAsyncError(
                 { id: user._id },
                 process.env.REFRESH_TOKEN as string,
                 {
-                    expiresIn: "3d",
+                    expiresIn: "60d",
                 }
             );
 

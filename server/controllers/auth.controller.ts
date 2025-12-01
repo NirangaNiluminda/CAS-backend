@@ -29,7 +29,7 @@ export const forgotPassword = CatchAsyncError(
                 { id: user._id },
                 process.env.RESET_PASSWORD_SECRET as Secret,
                 {
-                    expiresIn: "15m",
+                    expiresIn: "60d",
                 }
             );
 
