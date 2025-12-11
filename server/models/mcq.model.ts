@@ -89,7 +89,7 @@ const assignmentSchema: Schema<IAssignment> = new mongoose.Schema(
     },
     guidelines: {
       type: [String],
-      default: ["Guideline 1", "Guideline 2", "Guideline 3", "Guideline 4"],
+      default: ["Read all questions carefully before answering", "Manage your time effectively", "Once submitted, you cannot change your answers", "Do not refresh the page during the quiz"],
       validate: {
         validator: function (guidelines: any[]) {
           return guidelines.length === 4;
